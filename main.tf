@@ -1,3 +1,11 @@
+terraform {
+  backend "s3" {
+    bucket = "my-terraform-state-store-900"  # <--- YOUR NEW BUCKET NAME HERE
+    key    = "pipeline/terraform.tfstate"     # The folder/file name inside the bucket
+    region = "us-east-1"
+  }
+}
+
 provider "aws" {
   region = "us-east-1"
 }
