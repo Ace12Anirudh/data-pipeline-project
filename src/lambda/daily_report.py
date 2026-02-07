@@ -15,7 +15,7 @@ def handler(event, context):
     query = """
     SELECT 
         count(*) as total_orders, 
-        sum(cast(Total_Cost as double)) as total_revenue, 
+        sum(cast(amount as double)) as total_revenue, 
         current_date as report_date 
     FROM cleaned_data
     """
