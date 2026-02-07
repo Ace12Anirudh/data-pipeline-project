@@ -238,8 +238,8 @@ resource "aws_s3_bucket_notification" "bucket_notification" {
 # EventBridge -> Reporter Trigger (Daily at 8am)
 resource "aws_cloudwatch_event_rule" "daily_trigger" {
   name        = "daily-report-trigger"
-  description = "Triggers the report Lambda every day at 8am"
-  schedule_expression = "cron(0 8 * * ? *)"
+  description = "Triggers the report Lambda every day at 6:30 pm"
+  schedule_expression = "cron(30 18 * * ? *)"
 }
 
 resource "aws_cloudwatch_event_target" "trigger_lambda" {
