@@ -239,7 +239,7 @@ resource "aws_s3_bucket_notification" "bucket_notification" {
 resource "aws_cloudwatch_event_rule" "daily_trigger" {
   name        = "daily-report-trigger"
   description = "Triggers the report Lambda every day at 6:30 pm"
-  schedule_expression = "cron(30 18 * * ? *)"
+  schedule_expression = "cron(15 13 * * ? *)"
 }
 
 resource "aws_cloudwatch_event_target" "trigger_lambda" {
