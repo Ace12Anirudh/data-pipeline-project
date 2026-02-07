@@ -175,10 +175,14 @@ resource "aws_iam_role_policy" "lambda_athena_policy" {
         Action = [
             "athena:StartQueryExecution", 
             "athena:GetQueryExecution", 
+            "athena:GetQueryResults",      # Added this just in case
+            "glue:GetDatabase",            # <--- THIS WAS MISSING
             "glue:GetTable", 
             "glue:GetPartitions",
             "s3:GetBucketLocation",
-            "s3:ListBucket"
+            "s3:ListBucket",
+            "s3:PutObject",                # Needed to write the report
+            "s3:GetObject"
         ], 
         Effect = "Allow", 
         Resource = "*" 
