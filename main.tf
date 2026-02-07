@@ -13,7 +13,7 @@ provider "aws" {
 # --- 1. STORAGE (S3 Buckets) ---
 # We need a unique bucket name. Change 'unique-id-123' to something random!
 resource "aws_s3_bucket" "data_lake" {
-  bucket = "my-pipeline-bucket-unique-id-123"
+  bucket = "my-pipeline-bucket-unique-ace-123"
   force_destroy = true # Allows deleting bucket even if it has files (for testing)
 }
 
