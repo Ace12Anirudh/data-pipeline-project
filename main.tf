@@ -1,6 +1,6 @@
 terraform {
   backend "s3" {
-    bucket = "my-terraform-state-store-900"  # Your state bucket
+    bucket = "terraform-state-store-900"  # Your state bucket
     key    = "pipeline/terraform.tfstate"     # The folder/file name inside
     region = "us-east-1"
   }
