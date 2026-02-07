@@ -129,3 +129,73 @@ resource "aws_s3_bucket_notification" "bucket_notification" {
   
   depends_on = [aws_lambda_permission.allow_s3]
 }
+
+# --- 6. REPORTING (Daily Scheduler) ---
+
+# The Reporter Lambda Function
+data "archive_file" "report_zip" {
+  type        = "zip"
+  source_file = "src/lambda/daily_report.py"
+  output_path = "report_function.zip"
+}
+
+resource "aws_lambda_function" "reporter" {
+  filename      = "report_function.zip"
+  function_name = "daily-reporter"
+  role          = aws_iam_role.lambda_role.arn
+  handler       = "daily_report.handler"
+  runtime       = "python3.9"
+  source_code_hash = data.archive_file.report_zip.output_base64sha256
+  
+  timeout = 60 # Give it time to run the query
+
+  environment {
+    variables = {
+      BUCKET_NAME = aws_s3_bucket.data_lake.bucket
+    }
+  }
+}
+
+# Grant Lambda permission to run Athena
+resource "aws_iam_role_policy" "lambda_athena_policy" {
+  name = "lambda_athena_access"
+  role = aws_iam_role.lambda_role.id
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      { 
+        Action = [
+            "athena:StartQueryExecution", 
+            "athena:GetQueryExecution", 
+            "glue:GetTable", 
+            "glue:GetPartitions",
+            "s3:GetBucketLocation",
+            "s3:ListBucket"
+        ], 
+        Effect = "Allow", 
+        Resource = "*" 
+      }
+    ]
+  })
+}
+
+# EventBridge Scheduler (The Alarm Clock)
+resource "aws_cloudwatch_event_rule" "daily_trigger" {
+  name        = "daily-report-trigger"
+  description = "Triggers the report Lambda every day at 8am"
+  schedule_expression = "cron(0 8 * * ? *)" # Runs at 08:00 UTC daily
+}
+
+resource "aws_cloudwatch_event_target" "trigger_lambda" {
+  rule      = aws_cloudwatch_event_rule.daily_trigger.name
+  target_id = "SendDailyReport"
+  arn       = aws_lambda_function.reporter.arn
+}
+
+resource "aws_lambda_permission" "allow_eventbridge" {
+  statement_id  = "AllowExecutionFromEventBridge"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.reporter.function_name
+  principal     = "events.amazonaws.com"
+  source_arn    = aws_cloudwatch_event_rule.daily_trigger.arn
+}
