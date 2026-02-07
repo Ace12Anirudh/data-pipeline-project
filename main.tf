@@ -164,6 +164,10 @@ resource "aws_lambda_function" "reporter" {
   }
 }
 
+resource "aws_glue_catalog_database" "pipeline_db" {
+  name = "my_pipeline_db"
+}
+
 # Grant Lambda permission to run Athena
 resource "aws_iam_role_policy" "lambda_athena_policy" {
   name = "lambda_athena_access"

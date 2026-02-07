@@ -8,7 +8,7 @@ s3 = boto3.client('s3')
 
 def handler(event, context):
     bucket = os.environ['BUCKET_NAME']
-    database = 'default' # Athena's default database
+    database = 'my_pipeline_db' # Athena's default database
     output_location = f's3://{bucket}/reports/'
     
     # The Query: Calculate total revenue
