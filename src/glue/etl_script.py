@@ -1,11 +1,11 @@
 import sys
+import re
 from awsglue.transforms import *
 from awsglue.utils import getResolvedOptions
 from pyspark.context import SparkContext
 from awsglue.context import GlueContext
 from awsglue.job import Job
 
-# 1. Initialize Glue
 args = getResolvedOptions(sys.argv, ['JOB_NAME', 'input_path', 'output_path'])
 sc = SparkContext()
 glueContext = GlueContext(sc)
@@ -13,16 +13,20 @@ spark = glueContext.spark_session
 job = Job(glueContext)
 job.init(args['JOB_NAME'], args)
 
-# 2. Read Input Data (CSV)
-# We read the file passed from the input_path argument
-datasource0 = spark.read.option("header", "true").csv(args['input_path'])
+# 1. Read ANY CSV file (Generic)
+# "inferSchema" tells Spark to guess if it's a number or string automatically
+df = spark.read.option("header", "true").option("inferSchema", "true").csv(args['input_path'])
 
-# 3. Transformation (Example: Rename column 'Amount' to 'Total_Cost')
-# You can add more complex logic here
-transformed_df = datasource0.withColumnRenamed("Amount", "Total_Cost")
+# 2. Dynamic Column Cleaning
+# This loop fixes column names automatically (e.g., "Total Cost" -> "total_cost")
+# It works for ANY columns, whether you have 3 or 300.
+cleaned_df = df
+for col_name in df.columns:
+    # Replace spaces/special chars with underscores and make lowercase
+    new_name = re.sub(r'[^a-zA-Z0-9]', '_', col_name).lower()
+    cleaned_df = cleaned_df.withColumnRenamed(col_name, new_name)
 
-# 4. Write Output Data (Parquet)
-# We write to the processed folder
-transformed_df.write.mode("append").parquet(args['output_path'])
+# 3. Write Output (Parquet)
+cleaned_df.write.mode("append").parquet(args['output_path'])
 
 job.commit()
